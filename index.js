@@ -1,7 +1,6 @@
 import express from "express";
 import fetch from "node-fetch";
 import bodyParser from "body-parser";
-import querystring from "querystring";
 
 const app = express();
 app.use(bodyParser.urlencoded({ extended: false }));
@@ -45,6 +44,7 @@ app.post("/notify", async (req, res) => {
     // XML → JSON
     const xml2js = await import("xml2js");
     const parser = new xml2js.Parser({ explicitArray: false });
+
     const xmlJson = await parser.parseStringPromise(xmlText);
 
     const trans = xmlJson.transaction;
@@ -61,16 +61,15 @@ app.post("/notify", async (req, res) => {
 
     console.log("JSON final enviado ao PHP:", finalJson);
 
-    // ENVIA AO PHP COMO x-www-form-urlencoded (compatível com Hostinger)
-    const formBody = querystring.stringify(finalJson);
-
+    // ENVIA COMO JSON (correto)
     await fetch(PHP_WEBHOOK, {
       method: "POST",
-      headers: { "Content-Type": "application/x-www-form-urlencoded" },
-      body: formBody
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(finalJson)
     });
 
     res.status(200).send("OK");
+
   } catch (e) {
     console.error("ERRO NO PROXY:", e);
     res.status(500).send("ERROR");
